@@ -30,6 +30,8 @@ LABEL maintainer="Fulvio Capone" \
 RUN apt-get update \
   && apt-get install -y \
   sudo \
+  cron \
+  rsyslog \
   cups \
   cups-bsd \
   cups-filters \
@@ -90,6 +92,9 @@ RUN touch /etc/cron.daily/apt-upgrade \
     && echo 'apt upgrade -y' >> /etc/cron.daily/apt-upgrade \
     && echo 'apt autoremove -y' >> /etc/cron.daily/apt-upgrade \
     && echo 'apt clean' >> /etc/cron.daily/apt-upgrade
+
+# start rsyslog & cron
+RUN service rsyslog start && service cron start && systemctl enable rsyslog && systemctl enable crons
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 
