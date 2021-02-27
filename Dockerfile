@@ -6,7 +6,7 @@
 
 # base image
 ARG ARCH=arm32v7
-FROM $ARCH/debian:buster-slim
+FROM $ARCH/debian:latest
 
 # args
 #ARG VCS_REF
@@ -63,7 +63,7 @@ RUN /usr/sbin/cupsd \
   && echo 'DefaultEncryption IfRequested' >> /etc/cups/cupsd.conf
 
 # add custom config to CUPS admin
-# RUN echo 'DefaultEncryption IfRequested' >> /etc/cups/cupsd.conf
+RUN echo 'DefaultEncryption IfRequested' >> /etc/cups/cupsd.conf
 
 # copy /etc/cups for skeleton usage
 RUN cp -rp /etc/cups /etc/cups-skel
@@ -74,6 +74,8 @@ RUN cp -rp /etc/cups /etc/cups-skel
 RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo '#!/bin/bash -e' > /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'service cron start' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'echo -e "${ADMIN_PASSWORD}\n${ADMIN_PASSWORD}" | passwd admin' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'if [ ! -f /etc/cups/cupsd.conf ]; then' >> /usr/local/bin/docker-entrypoint.sh \
@@ -81,6 +83,11 @@ RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo 'fi' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'exec "$@"' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'service cron start' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'service rsyslog start' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'systemctl enable rsyslog' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'systemctl enable crons' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
@@ -93,8 +100,7 @@ RUN touch /etc/cron.daily/apt-upgrade \
     && echo 'apt autoremove -y' >> /etc/cron.daily/apt-upgrade \
     && echo 'apt clean' >> /etc/cron.daily/apt-upgrade
 
-# start rsyslog & cron
-RUN service rsyslog start && service cron start && systemctl enable rsyslog && systemctl enable crons
+RUN service cron start
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 
