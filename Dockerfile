@@ -74,6 +74,7 @@ RUN cp -rp /etc/cups /etc/cups-skel
 RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo '#!/bin/bash -e' > /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'service rsyslog start' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'service cron start' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'echo -e "${ADMIN_PASSWORD}\n${ADMIN_PASSWORD}" | passwd admin' >> /usr/local/bin/docker-entrypoint.sh \
@@ -83,11 +84,6 @@ RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo 'fi' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'exec "$@"' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'service cron start' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'service rsyslog start' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'systemctl enable rsyslog' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'systemctl enable crons' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
@@ -100,7 +96,7 @@ RUN touch /etc/cron.daily/apt-upgrade \
     && echo 'apt autoremove -y' >> /etc/cron.daily/apt-upgrade \
     && echo 'apt clean' >> /etc/cron.daily/apt-upgrade
 
-RUN service cron start
+RUN chmod +x /etc/cron.daily/apt-upgrade
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 
