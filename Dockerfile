@@ -22,8 +22,6 @@ LABEL maintainer="Fulvio Capone" \
   org.label-schema.description="Debian CUPS docker image" \
   org.label-schema.version="1.0" \
   org.label-schema.url="https://hub.docker.com/r/fulvio1982/debian-cups" \
-  #org.label-schema.vcs-url="https://gitlab.com/ydkn/docker-cups" \
-  #org.label-schema.vcs-ref=$VCS_REF \
   org.label-schema.build-date=$BUILD_DATE
 
 # install packages
