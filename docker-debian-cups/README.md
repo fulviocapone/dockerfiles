@@ -5,7 +5,7 @@
 
 # Overview
 Docker image based on Debian Latest including CUPS print server and printing drivers (installed from the Debian packages).
-The image manage also usb printers exposing three volumes.
+The image manages also usb printers exposing three volumes.
 It is present an automated daily job to update all packages in the system.
 
 ## Builds image by yourself
