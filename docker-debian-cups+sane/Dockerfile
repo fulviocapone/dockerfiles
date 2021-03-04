@@ -2,7 +2,7 @@
 # docker build -t fulvio1982/debian-cups --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` .
 
 # docker run
-# docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups -p 631:631 -e ADMIN_PASSWORD=mySecretPassword
+# docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups –v /sys/fs/cgroup:/sys/fs/cgroup:ro -p 631:631 -e ADMIN_PASSWORD=mySecretPassword
 
 # base image
 ARG ARCH=arm32v7
@@ -80,10 +80,10 @@ RUN adduser saned scanner \
     && chown saned:lp /etc/sane.d/saned.conf /etc/sane.d/dll.conf
 
 # set ACL from environment variable
-RUN echo '${SANED_ACL}' >> /etc/sane.d/saned.conf
+RUN echo 'echo -e "${SANED_ACL}"' >> /etc/sane.d/saned.conf
 
-# limit data_portrange to 10000 - 10001
-RUN sed -i 's/^#\s*data_portrange\s*=\s*.*$/data_portrange = 10000 - 10001/g' /etc/sane.d/saned.conf
+# limit data_portrange to 11000 - 11001
+RUN sed -i 's/^#\s*data_portrange\s*=\s*.*$/data_portrange = 11000 - 11001/g' /etc/sane.d/saned.conf
 
 # entrypoint
 # ADD docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -102,7 +102,7 @@ RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     #&& echo 'dbus-daemon --system --syslog --fork' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'cupsd -f' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'saned' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'systemctl start saned.socket' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'exec "$@"' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh
@@ -119,20 +119,21 @@ RUN touch /etc/cron.daily/apt-upgrade \
 
 RUN chmod +x /etc/cron.daily/apt-upgrade
 
-ENTRYPOINT [ "docker-entrypoint.sh" ]
+ENTRYPOINT [ "/sbin/init" ]
 
 # default command
 #CMD ["cupsd", "-f"]
 #CMD ["saned"]
-CMD [ "/sbin/init" ]
+CMD [ "docker-entrypoint.sh" ]
 
 # volumes
 VOLUME ["/etc/cups"]
 VOLUME ["/dev/bus/usb"]
 VOLUME ["/var/run/dbus"]
+VOLUME ["/sys/fs/cgroup"]
 
 # ports
 EXPOSE 631
-EXPOSE 6566 10000 10001
+EXPOSE 6566 11000 11001
 #–v /sys/fs/cgroup:/sys/fs/cgroup:ro
 #https://medium.com/swlh/docker-and-systemd-381dfd7e4628
