@@ -14,7 +14,7 @@ ARG BUILD_DATE
 
 # environment
 ENV ADMIN_PASSWORD=admin
-ENV SANED_ACL=localhost
+ENV SANED_ACL=192.168.0.0/24
 
 # labels
 LABEL maintainer="Fulvio Capone" \
@@ -80,7 +80,7 @@ RUN adduser saned scanner \
     && chown saned:lp /etc/sane.d/saned.conf /etc/sane.d/dll.conf
 
 # set ACL from environment variable
-RUN echo 'echo -e "${SANED_ACL}"' >> /etc/sane.d/saned.conf
+#RUN echo $SANED_ACL >> /etc/sane.d/saned.conf
 
 # limit data_portrange to 11000 - 11001
 RUN sed -i 's/^#\s*data_portrange\s*=\s*.*$/data_portrange = 11000 - 11001/g' /etc/sane.d/saned.conf
@@ -100,7 +100,10 @@ RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo '  cp -rpn /etc/cups-skel/* /etc/cups/' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'fi' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
-    #&& echo 'dbus-daemon --system --syslog --fork' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'echo "${SANED_ACL}" >> /etc/sane.d/saned.conf' >> /usr/local/bin/docker-entrypoint.sh \    
+    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
+#&& echo 'dbus-daemon --system --syslog --fork' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'cupsd -f' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'systemctl start saned.socket' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
