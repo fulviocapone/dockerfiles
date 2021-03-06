@@ -6,7 +6,7 @@
 
 # base image
 ARG ARCH=arm32v7
-FROM $ARCH/debian-buster-slim:latest
+FROM $ARCH/debian-buster-slim
 
 # args
 #ARG VCS_REF
