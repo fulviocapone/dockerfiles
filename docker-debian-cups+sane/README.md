@@ -17,5 +17,5 @@ docker build -t fulvio1982/debian-cups-sane --build-arg BUILD_DATE=`date -u +"%Y
 # Run the CUPS server
 To run the container you can use the follwing command:
 ```bash
-docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups -p 631:631 -e ADMIN_PASSWORD=mySecretPassword
+docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups -p 6566:6566 -p 11000:11000 -p 11001:11001 -e ADMIN_PASSWORD=mySecretPassword -e SANED_ACL=192.168.0.0/24
 ```

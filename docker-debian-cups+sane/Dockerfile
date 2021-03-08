@@ -1,8 +1,8 @@
 # docker build
-# docker build -t fulvio1982/debian-cups --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` .
+# docker build -t fulvio1982/debian-cups-sane --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` .
 
 # docker run
-# docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups –v /sys/fs/cgroup:/sys/fs/cgroup:ro -p 631:631 -e ADMIN_PASSWORD=mySecretPassword
+# docker run -d --restart always -p 631:631 --privileged -v /var/run/dbus:/var/run/dbus -v /dev/bus/usb:/dev/bus/usb -v /etc/cups:/etc/cups -p 6566:6566 -p 11000:11000 -p 11001:11001 -e ADMIN_PASSWORD=mySecretPassword -e SANED_ACL=192.168.0.0/24
 
 # base image
 ARG ARCH=arm32v7
@@ -32,7 +32,7 @@ RUN apt-get update \
   cron \
   rsyslog \
   dbus \
-  systemd \
+  procps \
   cups \
   cups-bsd \
   cups-filters \
@@ -79,9 +79,6 @@ RUN adduser saned scanner \
     && adduser saned lp \
     && chown saned:lp /etc/sane.d/saned.conf /etc/sane.d/dll.conf
 
-# set ACL from environment variable
-#RUN echo $SANED_ACL >> /etc/sane.d/saned.conf
-
 # limit data_portrange to 11000 - 11001
 RUN sed -i 's/^#\s*data_portrange\s*=\s*.*$/data_portrange = 11000 - 11001/g' /etc/sane.d/saned.conf
 
@@ -100,17 +97,16 @@ RUN touch /usr/local/bin/docker-entrypoint.sh \
     && echo '  cp -rpn /etc/cups-skel/* /etc/cups/' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'fi' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'echo "${SANED_ACL}" >> /etc/sane.d/saned.conf' >> /usr/local/bin/docker-entrypoint.sh \    
+    && echo 'sed -i "s|^#\s*192.168.0.1\s*/29\s*|${SANED_ACL}|g" /etc/sane.d/saned.conf' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo '' >> /usr/local/bin/docker-entrypoint.sh \
-#&& echo 'dbus-daemon --system --syslog --fork' >> /usr/local/bin/docker-entrypoint.sh \
+    && echo 'saned -a' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'cupsd -f' >> /usr/local/bin/docker-entrypoint.sh \
-    && echo 'systemctl start saned.socket' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh \
     && echo 'exec "$@"' >> /usr/local/bin/docker-entrypoint.sh \
     && echo '' >> /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
+RUN chmod a+w /etc/sane.d/saned.conf
 
 # apt daily upgrade script
 RUN touch /etc/cron.daily/apt-upgrade \
@@ -122,21 +118,13 @@ RUN touch /etc/cron.daily/apt-upgrade \
 
 RUN chmod +x /etc/cron.daily/apt-upgrade
 
-ENTRYPOINT [ "/sbin/init" ]
-
-# default command
-#CMD ["cupsd", "-f"]
-#CMD ["saned"]
-CMD [ "docker-entrypoint.sh" ]
+ENTRYPOINT [ "docker-entrypoint.sh" ]
 
 # volumes
 VOLUME ["/etc/cups"]
 VOLUME ["/dev/bus/usb"]
 VOLUME ["/var/run/dbus"]
-VOLUME ["/sys/fs/cgroup"]
 
 # ports
 EXPOSE 631
 EXPOSE 6566 11000 11001
-#–v /sys/fs/cgroup:/sys/fs/cgroup:ro
-#https://medium.com/swlh/docker-and-systemd-381dfd7e4628
