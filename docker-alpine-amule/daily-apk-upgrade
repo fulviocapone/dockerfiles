@@ -1,0 +1,3 @@
+#!/bin/bash
+apk upgrade --update-cache --available
+rm -rf /var/cache/apk/*
