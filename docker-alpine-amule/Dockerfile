@@ -121,6 +121,6 @@ VOLUME ["/home/amule/.aMule"]
 
 EXPOSE 4711/tcp 4712/tcp 4672/udp 4665/udp 4662/tcp 4661/tcp
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=30s CMD curl --fail http://localhost:4711|| exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s CMD curl --fail http://localhost:4711|| exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
